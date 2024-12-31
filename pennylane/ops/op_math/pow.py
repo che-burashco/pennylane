@@ -19,6 +19,8 @@ from typing import Union
 
 from scipy.linalg import fractional_matrix_power
 
+import jax
+
 import pennylane as qml
 from pennylane import math as qmlmath
 from pennylane.operation import (
@@ -243,7 +245,9 @@ class Pow(ScalarSymbolicOp):
             for _ in range(scalar - 1):
                 out @= mat
             return out
-
+        if qml.math.get_deep_interface(mat) == 'jax':
+            result_shape = jax.ShapeDtypeStruct(mat.shape, mat.dtype)
+            return jax.pure_callback(fractional_matrix_power, result_shape, mat, scalar)
         return fractional_matrix_power(mat, scalar)
 
     # pylint: disable=arguments-renamed, invalid-overridden-method
